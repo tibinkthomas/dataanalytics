@@ -1,5 +1,5 @@
-# dataanalytics
-
+# Dataanalytics
+ - MS in Business Analytics - EDA
 # Final Project repository
 
 This repository is a collection of code and figures used in the final project.
