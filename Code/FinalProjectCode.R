@@ -7,3 +7,4 @@ b<-unique(gapminder$Year)
 b
 c<-unique(gapminder$region)
 c
+install.packages("stringi", repos="http://cran.rstudio.com/", dependencies = TRUE)

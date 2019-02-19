@@ -1,0 +1,838 @@
+---
+title: "Gap Minder Analysis"
+author: "Tibin Thomas"
+date: "2/17/2019"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+
+----------------
+
+### Objective
+
+The goal of this project is to analyze gapminder dataset by exploring the data, visualizing the data and reporting the findings in a precise and concise format. 
+
+
+```{r,echo=FALSE,warning=FALSE}
+library(readxl)
+gapmind <- read.csv("C:/Users/tthomas/OneDrive/Academics/MS in Analytics/ANLY506ExploratoryDataAnaly/FinalProject/dataanalytics/Data/gapminder.csv")
+View(gapmind)
+library(ggplot2)
+library(RColorBrewer)
+library(GGally)
+library(reshape2)
+library(ggpubr)
+library(plyr)
+library(dplyr)
+library(magrittr)
+library(ggplot2)
+library(tidyr)
+library(data.table)
+library(markdown)
+library(twang)
+library(factoextra)
+library(nycflights13)
+library(lubridate)
+library(matrixStats)
+```
+
+### Overview
+
+To get an overview of the data, let's shake the data like a little gift box we received. Let's use some R functions to obtain glances at the daya. 
+
+```{r, echo=FALSE, warning=FALSE}
+class(gapmind)# To see what class the object is
+names(gapmind)# To see  
+```
+
+The data.frame object has 6 variables, Country, Year, Life, Population, Income and region. 
+Let us analyze the object to see what the datatypes are for the object. 
+
+```{r, echo=FALSE, warning=FALSE}
+str(gapmind)#Detailed summary of structure of data
+head(gapmind)# First few rows of data
+unique(gapmind$Country)
+unique(gapmind$Year)
+unique(gapmind$region)
+```
+
+There are 41284 data points.The dataset has 197 countries and for each of the 197 unique countries and 6 regions namely South Asia, Europe & Central Asia, Middle East & North Africa, Sub-Saharan Africa, America and East Asia & Pacific, the data provides values for Life, Population and Income for 41284 observations. The data spans from year 1800 to year 2015.
+
+NExt step is to see what the data really is. Let's get a summary for the data.
+
+```{r, echo=FALSE, warning=FALSE}
+summary(gapmind)# To see the quantitive summary of the data
+```
+
+The summary shows us a lot of takeaways but one the most striking one for me is that there are a lot of NAs in the dataset. We need to remember to take that in to consideration while analyzig the data. Let's dive more into the data. 
+
+***
+
+## Univariate Analysis
+
+Now that we have a general idea about the data, let us see the summary of each variables by groups to get a better feel for the data. Then let us look at the distribution to see how the counts are. 
+
+<!-- Let's plot the distribution of each of the variable as I would like to get a feel of the variables first. Based on the distribution shape, i.e. Normal, Positive Skew or Negative Skew and amount of outliers present into them, this will also help us to get some sense what to expect when I plot different variables against each other.-->
+
+### Life
+
+Let's check life spread and summary 
+
+```{r,echo=FALSE,warning=FALSE}
+arrange(gapmind, life)
+arrange(gapmind, desc(life)) 
+View(gapmind %>% # Compute groupwise and show the table
+ group_by(region) %>%
+ summarize(mean(life),
+ median(life)))
+gapmind %>% # For each region
+ group_by(region) %>%
+ summarize("StandardDeviation" = sd(life),
+ "InterQuartileRange" = IQR(life),
+ "Number" = n())
+```
+
+<!--Much more disparate but we have a nice peak around 9.5% by volume. All in all it still looks like a normal distribution, slight skewed towards left.-->
+
+It looks like the lowest life expectancy is for Fiji with 1 year for the year 1875. Andora for year 2015 has the highest life expectancy at 84.1 years. The table shows the mean and median of life expectancy for the 5 regions and Europe & Central Asia has the highest mean and median life expectancy at 48.79419 and 41.74110 and the gighest standard deviation and IQR at 17.09 and 31.   
+
+Next let's look at the distribution,
+```{r,echo=FALSE,warning=FALSE}
+ggplot(gapmind) + geom_boxplot(aes(x = region, y = life))
+a <- ggplot(gapmind, aes(x = life))
+a + geom_density() +
+  geom_vline(aes(xintercept = mean(life)), 
+             linetype = "dashed", size = 0.6)
+a + geom_density(aes(y = ..count..), fill = "lightgray") +
+  geom_vline(aes(xintercept = mean(life)), 
+             linetype = "dashed", size = 0.6,
+             color = "#FC4E07")
+```
+### Population
+
+Let's check population spread and summary
+
+```{r,echo=FALSE,warning=FALSE}
+gapmind %>% # For each region
+ group_by(region) %>%
+ summarize("StandardDeviation" = sd(population),
+ "InterQuartileRange" = IQR(population),
+ "Number" = n())
+```
+```{r,echo=FALSE,warning=FALSE}
+ggplot(gapmind) + geom_boxplot(aes(x = region, y = population))
+a <- ggplot(gapmind, aes(x = population))
+a + geom_density() +
+  geom_vline(aes(xintercept = mean(population)), 
+             linetype = "dashed", size = 0.6)
+a + geom_density(aes(y = ..count..), fill = "lightgray") +
+  geom_vline(aes(xintercept = mean(population)), 
+             linetype = "dashed", size = 0.6,
+             color = "#FC4E07")
+```
+<!--Much more disparate but we have a nice peak around 9.5% by volume. All in all it still looks like a normal distribution, slight skewed towards left.-->
+
+### Income
+
+Next let us look at Income,    
+```{r,echo=FALSE,warning=FALSE}
+arrange(gapmind, income)
+arrange(gapmind, desc(income)) 
+View(gapmind %>% # Compute groupwise and show the table
+ group_by(region) %>%
+ summarize(mean(income, na.rm=TRUE),
+ median(income, na.rm=TRUE)))
+gapmind %>% # For each region
+ group_by(region) %>%
+ summarize("StandardDeviation" = sd(income, na.rm=TRUE),
+ "InterQuartileRange" = IQR(income, na.rm=TRUE),
+ "Number" = n())
+```
+
+It looks like the lowest income reported was for the country Liberia in Sub-Suharan Africa for the year 1995. The highest income recorded was for Country United Arab Emirates in Middle East & North Africa for the year 1980. Highest mean income was for Middle East & North Africa at 8064.382 while the lowest was for South Asia at 1384.976. Lowest median income was sub saharan Africa at 827 while the highest median was for Europe & Central Asia at 2735. 
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot(gapmind) + geom_boxplot(aes(x = region, y = income))
+a <- ggplot(gapmind, aes(x = income))
+a + geom_density() +
+  geom_vline(aes(xintercept = mean(income)), 
+             linetype = "dashed", size = 0.6)
+a + geom_density(aes(y = ..count..), fill = "lightgray") +
+  geom_vline(aes(xintercept = mean(income)), 
+             linetype = "dashed", size = 0.6,
+             color = "#FC4E07")
+```
+
+The above graph tells us that the distriubtoin is skewed. The distributoin has a very small number of large values and a very large number of small values. 
+
+
+<!--It looks like a normal distribution. Most of the wines quality are around 5/6/7. As the good quality and the poor quality wines are almost like outliers here, it might be difficult to get an accurate model of the Wine Quality. Let's look at the other plots.-->
+
+***
+
+
+##Bivariate  analysis
+
+Next, let us look at the bivariate analysis. First let us look at income and life  
+
+### Income and Life
+
+```{r,echo=FALSE,warning=FALSE}
+p <- ggplot(filter(gapmind),
+            aes(x = income, y = life)) # just initializes
+p <- p + scale_x_log10() # log the x axis the right way
+p + geom_point() # scatterplot
+p + geom_point(aes(color = region)) # map continent to color
+p + geom_point(alpha = (1/3), size = 3) + geom_smooth(lwd = 3, se = FALSE)
+p + geom_point(alpha = (1/3), size = 3) + facet_wrap(~ region) +
+  geom_smooth(lwd = 1.5, se = FALSE)
+```
+
+
+
+To check if the income levels affect life generally, we plot income vs life and conduct a correlation test. 
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot(aes(x = income, y = life), data = gapmind) +
+  geom_jitter(alpha = 0.5, size = 0.2) +
+  geom_boxplot(outlier.colour= 'red', alpha = 0.5, color = 'blue') +
+  ggtitle("Income vs life")
+cor(gapmind$life, gapmind$income, use = 'pairwise')
+```
+
+There is a correlation of 0.58 between income and life which is evidence that these two are correalated.We can observe from the graph that the higher the income, the higher the life. This is very much true for America. 
+
+***
+### Year and Life 
+
+```{r,echo=FALSE,warning=FALSE}
+p <- ggplot(filter(gapmind),
+            aes(x = Year, y = life)) # just initializes
+p <- p + scale_x_log10() # log the x axis the right way
+p + geom_point() # scatterplot
+p + geom_point(aes(color = region)) # map continent to color
+p + geom_point(alpha = (1/3), size = 3) + geom_smooth(lwd = 3, se = FALSE)
+p + geom_point(alpha = (1/3), size = 3) + facet_wrap(~ region) +
+  geom_smooth(lwd = 1.5, se = FALSE)
+```
+
+
+
+To check if the life generally increases or decreases as the time progress, we plot year vs life and conduct a correlation test. 
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot(aes(x = Year, y = life), data = gapmind) +
+  geom_jitter(alpha = 0.5, size = 0.2) +
+  geom_boxplot(outlier.colour= 'red', alpha = 0.5, color = 'blue') +
+  ggtitle("Year VS Life")
+cor(gapmind$Year, gapmind$life, use = 'pairwise')
+```
+
+There is a strong correlation of 0.78 between year and life which is evidence that these two are correalated. We can observe from the graph that as the time progresses, the life ewxpectancy becomes higher. This is very much true for Sub Saharan Africa. 
+
+***
+##Multivariate analysis
+
+A closer look at chlorides.
+***
+
+###Chlorides and alcohol by quality
+
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot_base_alcohol.quality<-ggplot(aes(x = alcohol), data = gapmind) +
+  facet_wrap(~quality.lvl, scales = 'free_y')
+  
+ggplot_base_alcohol.quality +
+   geom_jitter(aes(y = chlorides), alpha =0.2, size = 0.4) +
+  geom_smooth(aes(y = chlorides)) +
+  ggtitle("Chlorides by alcohol facetted by quality")
+```
+
+The overall trend is downward: less chlorides as the alcohol level gets higher. 
+But we can see that for the top 4 qualities (6,7,8), we got a major concentration around 10 to 12, where salt level rises a bit. It might be some outlier as we only got a few points for those quality.
+
+```{r,echo=FALSE,warning=FALSE}
+with(subset(gapmind, quality.lvl==5),cor(chlorides,alcohol))
+with(subset(gapmind, quality.lvl==6),cor(chlorides,alcohol))
+with(subset(gapmind, quality.lvl==7),cor(chlorides,alcohol))
+with(subset(gapmind, quality.lvl==8),cor(chlorides,alcohol))
+```
+
+The correlation between chlorides and alcohol are:
+
+* -0.223 for quality 5
+* -0.319 for quality 6
+* -0.554 for quality 7
+* -0.512 for quality 8
+
+Correlations are weak for 5th and 6th level quality, but quite noticible between 7th and 8th levels.
+
+***
+###Residual sugar and alcohol by quality
+
+Let's look at the same thing with sugar:
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot_base_alcohol.quality +
+  geom_jitter(aes(y = residual.sugar), alpha =0.2, size = 0.4) +
+  geom_smooth(aes(y = residual.sugar)) +
+  ggtitle("Residual sugar by alcohol facetted by quality")
+```
+
+
+Overall the downward trend to notice here. Let's confirm this by correlation
+
+
+```{r,echo=FALSE,warning=FALSE}
+with(subset(gapmind, quality.lvl==5),cor(residual.sugar,alcohol))
+with(subset(gapmind, quality.lvl==6),cor(residual.sugar,alcohol))
+with(subset(gapmind, quality.lvl==7),cor(residual.sugar,alcohol))
+with(subset(gapmind, quality.lvl==8),cor(residual.sugar,alcohol))
+```
+
+The correlations are not strong:
+
+* -0.441 for quality 5
+* -0.454 for quality 6
+* -0.480 for quality 7
+* -0.522 for quality 8
+
+The correlation for all qualities are kind of consistence, 8th bieng on higher side, but we only have a few data points fior this quyality so the correlation might be due to that.
+
+The trends in the plots for chlorides and residual.sugar look kind of the same, both have negative cor. Chlorides and residual sugar might be linked.
+
+***
+###Chlorides and residual sugar by quality
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot(aes(x = chlorides, y = residual.sugar), data = gapmind) +
+  geom_jitter(alpha=0.4, size = 0.3) +
+  geom_smooth(color=I('orange')) +
+  xlim(quantile(gapmind$chlorides,0.05), 
+       quantile(gapmind$chlorides,0.95)) +
+  ylim(quantile(gapmind$residual.sugar,0.05), 
+       quantile(gapmind$residual.sugar,0.95)) +
+  facet_wrap(~quality.lvl, scales = 'free') +
+  ggtitle("Chlorides by residual sugar smoother, .95 quantile")
+```
+
+The relation between chlorides and residual sugar seems to go more wiggly (non-linear) as the quality improves. It might make white wine taste unpleasent and unpredictable in the end.
+
+Let see if the ratio of sugar by chlorides is any help:
+
+```{r,echo=FALSE,warning=FALSE}
+#adding ratio of residual.sugar/chlorides to gapmind dataframe
+gapmind$residual.sugar_chlorides=with(gapmind,residual.sugar/chlorides)
+ggplot(aes(x = quality.lvl, y = residual.sugar_chlorides, color = density), data = gapmind) +
+  geom_jitter(alpha = 0.3, size = 0.7) +
+  geom_boxplot(alpha = 0.2) +
+  ylim(quantile(gapmind$residual.sugar_chlorides,0.05), 
+       quantile(gapmind$residual.sugar_chlorides,0.95)) +
+  ggtitle("Residual sugar/Chlorides by quality, .95 quantile")
+```
+
+No chance here. I was hoping for some clusters of points for each quality level, but they can vary widely.
+
+```{r,echo=FALSE,warning=FALSE}
+with(subset(gapmind, quality.lvl==5),cor(residual.sugar,chlorides))
+with(subset(gapmind, quality.lvl==6),cor(residual.sugar,chlorides))
+with(subset(gapmind, quality.lvl==7),cor(residual.sugar,chlorides))
+with(subset(gapmind, quality.lvl==8),cor(residual.sugar,chlorides))
+```
+
+The correlation for quality 5, 6 and 7 is quite low (0.02, 0.03 and 0.27 respectively) but the one for 8 is considerable. This might be because we have fewer point on the 8 quality than on other quality level. Furthermore, we have very far off values in both residual.sugar and chlorides, let's calculate the same value on a subset limited between the .05 and .95 quantiles.
+
+
+```{r,echo=FALSE,warning=FALSE}
+gapmind_quant<-subset(gapmind,
+                        quantile(gapmind$residual.sugar,0.05)<=residual.sugar
+                        & quantile(gapmind$residual.sugar,0.95)>=residual.sugar
+                        & quantile(gapmind$chlorides,0.05)<=chlorides 
+                        & quantile(gapmind$chlorides,0.95)>=chlorides)
+with(subset(gapmind_quant, quality.lvl==5),
+     cor(residual.sugar, chlorides))
+with(subset(gapmind_quant, quality.lvl==6),
+     cor(residual.sugar, chlorides))
+with(subset(gapmind_quant, quality.lvl==7),
+     cor(residual.sugar, chlorides))
+with(subset(gapmind_quant, quality.lvl==8),
+     cor(residual.sugar, chlorides))
+```
+
+Correlations are slightly improved with the removing of the extreme quantiles:
+
+* 0.112 for quality 5
+* 0.197 for quality 6
+* 0.348 for quality 7
+* 0.417 for quality 8
+
+I think this relationship between residual sugar and chlorides is worth investigating to see if other variables might come in play.
+So let's map chlorides with sugar and add alcohol as a color and use this as a base for other graphs.
+
+***
+
+###Chlorides, residual sugar and alcohol by quality
+
+```{r,echo=FALSE,warning=FALSE}
+gapmind_quant$alcohol.bucket = cut(gapmind_quant$alcohol,
+                            c(8, 9.5, 11, 12.5, 14))
+ggplot(aes(x = factor(quality), y = volatile.acidity ), data = gapmind_quant) + 
+   geom_boxplot( aes(fill= alcohol.bucket))  +
+  scale_fill_brewer(type='seq', guide=guide_legend(title='Quality'))
+ggplot(aes(x =residual.sugar, y = chlorides, color = factor(quality)), 
+       data = gapmind_quant) +
+      geom_point(alpha = 0.8, size = 1) +
+      geom_smooth(method = "lm", se = FALSE,size=1)  +
+  scale_color_brewer(type='seq', guide=guide_legend(title='Quality'))
+```
+
+
+We can see as before that the lower the chloride content, the better alcohol. Furthermore, low alcohol levels seems to have less sugar and high chloride content
+
+
+```{r,echo=FALSE,warning=FALSE}
+with(gapmind_quant, cor(residual.sugar_chlorides, alcohol))
+with(subset(gapmind_quant, quality.lvl==5),
+     cor(residual.sugar_chlorides, alcohol))
+with(subset(gapmind_quant, quality.lvl==6),
+     cor(residual.sugar_chlorides, alcohol))
+with(subset(gapmind_quant, quality.lvl==7),
+     cor(residual.sugar_chlorides, alcohol))
+with(subset(gapmind_quant, quality.lvl==8),
+     cor(residual.sugar_chlorides, alcohol))
+```
+
+The correlation between residual.sugar_chlorides and alcohol for the subset is -0.299 which is low. Breaking it up by quality we have:
+
+* -0.350 for quality 5
+* -0.330 for quality 6
+* -0.295 for quality 7
+* -0.287 for quality 8
+
+So the correlation does not vary greatly between quality. We do not have a specific relationship for some qualities.
+
+***
+
+###Acidity variables and quality
+
+Let's go back to our acidity variables:
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot_base_acidity<-ggplot(aes(x = quality.lvl), data = gapmind)
+#fixed acidity
+ggplot_base_acidity +
+  geom_boxplot(aes(y = fixed.acidity), outlier.colour = 'red', alpha = 0.2) +
+  ggtitle("Fixed acidity by quality")
+#volatile acidity
+ggplot_base_acidity +
+  geom_boxplot(aes(y = volatile.acidity), outlier.colour = 'red', alpha = 0.2) +
+  ggtitle("Volatile acidity by quality")
+#citric acidity
+ggplot_base_acidity +
+  geom_boxplot(aes(y = citric.acid), outlier.colour = 'red', alpha = 0.2) +
+  ggtitle("Citric acid by quality")
+```
+
+These box plots doesn't help much in exploration here., Let's check correlations.
+
+```{r,echo=FALSE,warning=FALSE}
+with(gapmind, cor(quality, fixed.acidity))
+with(gapmind, cor(quality, volatile.acidity))
+with(gapmind, cor(quality, citric.acid))
+```
+
+Correlation tells that citric acidity correlates very weakly with the quality (-0.009).
+On the other hand, volatile acidity (-0.19) and fixed acid (-0.11) are somewhat present, especially volatile acidity. This kind of acidity correlates negatively with quality meaning that as the quality improves, the volatile acidity decreases. The vinegar taste brought by volatile acidity is really hurting the quality.
+
+
+So we now have alcohol, fixed acid and volatile acidity correlating quite strongly with quality.
+I will get back to the previous facetted chart of residual sugar and chlorides and add citric acid/volatile acidity to see if I can get some more information.
+
+***
+
+###Chlorides, residual sugar and acidities by quality
+
+```{r,echo=FALSE,warning=FALSE}
+sugar.chlorides<-ggplot(aes(x = residual.sugar, y = chlorides), 
+                        data = gapmind_quant) +
+  facet_wrap(~quality.lvl, scales = 'free')
+sugar.chlorides +
+  geom_jitter(aes(color=volatile.acidity), size = 0.7) +
+  scale_colour_gradient2(low="yellow", high="blue", midpoint=0.3) +
+  ggtitle('Chlorides, residual sugar & volatile acidity facetted by quality')
+with(gapmind_quant, cor(residual.sugar_chlorides, volatile.acidity))
+```
+
+
+we can see that as the volatile acidity level increases, the quality seems to go down a bit (-0.19), showing slight negative correlation there.
+
+
+```{r,echo=FALSE,warning=FALSE}
+sugar.chlorides+
+  geom_jitter(aes(color=citric.acid), size = 0.7) +
+  scale_colour_gradient2(low="red", high="blue", midpoint=0.25) +
+  ggtitle('Chlorides, residual sugar & citric acid facetted by quality')
+```
+
+
+citric acid and white wine quality are very less related. Seems to flaten out across all levels
+
+
+```{r,echo=FALSE,warning=FALSE}
+with(gapmind_quant, cor(residual.sugar_chlorides, citric.acid))
+with(subset(gapmind_quant, quality.lvl==5),
+     cor(residual.sugar_chlorides, citric.acid))
+with(subset(gapmind_quant, quality.lvl==6),
+     cor(residual.sugar_chlorides, citric.acid))
+with(subset(gapmind_quant, quality.lvl==7),
+     cor(residual.sugar_chlorides, citric.acid))
+with(subset(gapmind_quant, quality.lvl==8),
+     cor(residual.sugar_chlorides, citric.acid))
+```
+
+Correlations show that there is in fact nothing. The correaltion for our subset is 0.09. Breaking by quality: 
+
+* 0.20 for quality 5
+* 0.02 for quality 6
+* 0.007 for quality 7
+* -0.08 for quality 8
+
+***
+
+###Chlorides, residual sugar and density by quality
+Density is related to alcohol so let see if we can find something here.
+
+```{r,echo=FALSE,warning=FALSE}
+sugar.chlorides+
+  geom_jitter(aes(color=density), size = 0.7) +
+  scale_colour_gradient2(low="red", high="blue", midpoint=0.9975) +
+  ggtitle("Chlorides by residual sugar and density")
+```
+
+
+There is some trend going on, better wine quality has higher residual.sugar and higher densities.
+
+```{r,echo=FALSE,warning=FALSE}
+with(gapmind_quant, cor(residual.sugar_chlorides, density))
+with(gapmind_quant, cor(residual.sugar_chlorides, alcohol))
+with(subset(gapmind_quant, quality.lvl==5),
+     cor(residual.sugar_chlorides, density))
+with(subset(gapmind_quant, quality.lvl==5),
+     cor(residual.sugar_chlorides, alcohol))
+```
+
+Density relates more to the residual.sugar_chlorides ratio than alcohol: 0.67 vs -0.29. We have the same phenomenom for quality 5: 0.79 for density vs -0.35 for alcohol.
+
+***
+
+### Chlorides, residual sugar and sulphates by quality
+
+```{r,echo=FALSE,warning=FALSE}
+#adding a limit on the sulphates as there seems to be outlier far off
+sugar.chlorides+
+  geom_jitter(aes(color=sulphates), size =0.7, 
+              data = subset(gapmind, 
+                            sulphates<quantile(gapmind$sulphates,0.95))) +
+  scale_colour_gradient2(low="red", high="blue", midpoint=0.5) +
+  ggtitle("Chlorides by residual sugar and sulphates")
+```
+
+It seems that we get more sulphate, the more residual sugar and chlorides in the wine.
+
+```{r,echo=FALSE,warning=FALSE}
+with(gapmind_quant, cor(residual.sugar_chlorides, citric.acid))
+with(subset(gapmind_quant, quality.lvl==5),
+     cor(residual.sugar_chlorides, citric.acid))
+with(subset(gapmind_quant, quality.lvl==6),
+     cor(residual.sugar_chlorides, citric.acid))
+with(subset(gapmind_quant, quality.lvl==7),
+     cor(residual.sugar_chlorides, citric.acid))
+with(subset(gapmind_quant, quality.lvl==8),
+     cor(residual.sugar_chlorides, citric.acid))
+```
+
+Correlations show that there is in fact nothing. The correaltion for our subset is 0.09. Breaking by quality: 
+
+* 0.20 for quality 5
+* 0.02 for quality 6
+* 0.00 for quality 7
+* 0.08 for quality 8
+***
+
+### Chlorides, residual sugar and density by quality
+
+Density is related to alcohol so let see if we can find something here.
+
+```{r,echo=FALSE,warning=FALSE}
+sugar.chlorides+
+  geom_jitter(aes(color=density), size = 0.4) +
+  scale_colour_gradient2(low="red", high="blue", midpoint=0.995) +
+  ggtitle("Chlorides by residual sugar and density")
+```
+
+We get the kind of graph with less dense wines on the left side of the graphs whereas more dense wines are in the right region across all quality levels.
+
+```{r,echo=FALSE,warning=FALSE}
+with(gapmind_quant, cor(residual.sugar_chlorides, density))
+with(gapmind_quant, cor(residual.sugar_chlorides, alcohol))
+with(subset(gapmind_quant, quality.lvl==6),
+     cor(residual.sugar_chlorides, density))
+with(subset(gapmind_quant, quality.lvl==6),
+     cor(residual.sugar_chlorides, alcohol))
+```
+
+Density relates more to the residual.sugar_chlorides ratio than alcohol: 0.67 vs -0.29. We have the same phenomenom for quality 6 (0.69 for density vs -0.33 for alcohol).
+
+***
+
+### Chlorides, residual sugar and sulphates by quality
+
+```{r,echo=FALSE,warning=FALSE}
+#adding a limit on the sulphates as there seems to be outlier far off
+sugar.chlorides+
+  geom_jitter(aes(color=sulphates), size = 0.4,
+              data = subset(gapmind, 
+                            sulphates<quantile(gapmind$sulphates,0.95))) +
+  scale_colour_gradient2(low="red", high="blue", midpoint=0.4) +
+  ggtitle("Chlorides by residual sugar and sulphates")
+```
+
+
+There seems to be no clear picture of sulphate relation with quality, niether with chlorides and residual.sugar.
+
+
+```{r,echo=FALSE,warning=FALSE}
+with(gapmind_quant, cor(residual.sugar_chlorides, sulphates))
+with(subset(gapmind_quant, quality.lvl==5),
+     cor(residual.sugar_chlorides, sulphates))
+with(subset(gapmind_quant, quality.lvl==6),
+     cor(residual.sugar_chlorides, sulphates))
+with(subset(gapmind_quant, quality.lvl==7),
+     cor(residual.sugar_chlorides, sulphates))
+with(subset(gapmind_quant, quality.lvl==8),
+     cor(residual.sugar_chlorides, sulphates))
+```
+
+The correlation confirms this impression with a correlation of -0.07 for the subset between residual.sugar_chlorides and sulphates. Breaking down by quality:
+
+* 0.02 for quality 5
+* -0.07 for quality 6
+* -0.14 for quality 7
+* -0.27 for quality 8
+
+Correlations by quality are low and increases for quality 8 but this quality8 has only a few data points.
+
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot(aes(x = quality.lvl, y = sulphates), 
+       data = subset(gapmind, 
+                     sulphates<quantile(gapmind$sulphates,0.95))) +
+  geom_boxplot(outlier.colour = 'red', alpha =0.5) +
+  ggtitle("Sulphates by quality, with sulphates<0.95)")
+```
+
+
+No strong correaltion here.
+
+
+```{r,echo=FALSE,warning=FALSE}
+with(gapmind_quant, cor(quality, sulphates))
+```
+
+
+The correlation confirms this (0.05), that no strong relation between the quality and sulpahtes.
+
+Let's now look at sulfurs.
+
+***
+
+### Chlorides, residual sugar and sulfurs by quality
+
+```{r,echo=FALSE,warning=FALSE}
+# subset to filter outlier
+      
+sugar.chlorides+
+  geom_jitter(aes(color=free.sulfur.dioxide), size = 0.7, 
+              data = subset(gapmind, 
+                     free.sulfur.dioxide<quantile(gapmind$free.sulfur.dioxide,
+                                                  0.95))) +
+  scale_colour_gradient2(low="red", high="blue", midpoint=14) +
+  ggtitle('chlorides by residual sugar & 
+          free sulfur dioxide facetted by quality')
+# subset to filter outlier
+sugar.chlorides+
+  geom_jitter(aes(color=total.sulfur.dioxide), size = 0.5, 
+              data = subset(gapmind, 
+                     total.sulfur.dioxide < 
+                       quantile(gapmind$total.sulfur.dioxide, 0.95))) +
+  scale_colour_gradient2(low="red", high="blue", midpoint=100) +
+  ggtitle('chlorides by residual sugar & total sulfur dioxide facetted by quality')
+```
+
+Both plots have sulfur levels showing on all qualities and on all levels of residual.sugar and chlorides. There is slight positive relationships between those variables.
+
+```{r,echo=FALSE,warning=FALSE}
+with(gapmind_quant, cor(residual.sugar_chlorides, free.sulfur.dioxide))
+with(gapmind_quant, cor(residual.sugar_chlorides, total.sulfur.dioxide))
+```
+
+Correlation are indeed slight positive: 
+
+* 0.27 between residual.sugar_chlorides and free.sulfur.dioxide
+* 0.30 between residual.sugar_chlorides and total.sulfur.dioxide
+
+
+First of all, there are outliers in the dataset. I tried to remove them when their value seemed to really be out of range. But it might also underlines the diversity of wines. As I am not sure, the following graphs are based on the whole dataset.
+All in all, there is not some really strong correlations between quality and the other variables presented here. But I could understood some relationships regarding tastes:
+
+### Vinegar taste is not really looked for
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot(aes(x = volatile.acidity, fill=quality.lvl), data = gapmind) +
+  geom_density(aes(y=..scaled..), alpha = 0.5) +
+  scale_fill_brewer(type = 'seq', palette = 3) +
+  labs(x = 'Volatile acidity (g / dm^3)', 
+       y = 'Scaled density',  
+       fill='Quality') +
+  ggtitle("Volatile acidity by quality")
+```  
+
+_volatile.acidity = Vinegar taste, unpleasant actually_
+
+The density were scaled so that the low counts of the extreme quality do affect the overall distribution.
+As the quality of the wines get higher, the volatile acidity is gettinglower. The correlation is not so strong at -0.19. The negative sign signifies that the higher the volatile acidity (and hence the vinegar taste) the lower the quality.
+It is not always true. This is kind of what we can expect. When you buy cheap wine (which is not always, but most of the time of lower quality) it has most of the time a pugent smell and taste, like vinegar.
+  
+### Citric Acid is inefficient on white_wine quality
+
+_citric acid: found in small quantities, citric acid can add 'freshness' and flavor to wines_
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot(aes(x = quality.lvl, y = citric.acid), data = gapmind) +
+  geom_jitter(size = 0.1, alpha = 0.4) +
+  geom_boxplot(outlier.colour = 'red', alpha =0.3, outlier.size = 0.5) +  
+  labs(x = 'Quality level', 
+       y = 'Citric acid (g / dm^3)') +
+  ggtitle("Citric Acid by quality (red outliers)")
+```
+
+citric acid does not play so significant role here to enhance quality.
+
+### Get high alcohol level and  low sulphates for better gapmind
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot(aes(x = sulphates, y = alcohol, color = quality.lvl), 
+       data = gapmind) +
+  geom_jitter(size = 0.2) +
+  stat_smooth(aes(fill = quality.lvl),
+              level = 0.75, size = 1.2, alpha = 0.1, method = 'loess') +
+  coord_cartesian() +
+  xlim(0.4,0.75) +
+  ylim(6,15) +
+  scale_fill_brewer(type = 'seq', palette = 2, guide = FALSE) +
+  scale_color_brewer(type = 'seq', palette = 4) +
+  labs(x = 'Sulphates (g / dm3)', 
+       y = 'Alcohol (%/volume)', 
+       color = 'Quality') +
+  ggtitle("Alcohol by sulphates and quality (.75 confidence interval)")
+```
+
+This graph shows smoothers of alcohol by sulphates for all quality. Quality and alcohol have a strong correlation.
+
+The low quality (3) wines vary a lot but the overal trend is that they are low in alcohol and the alcohol level decreases as the sulphates level increases. Qualities 4 to 7 are flat overall and the only differences come from the alcohol level.
+Quality 7 and 8 wines are peculiar in that they are grouped in the top left corner. The relationship is not flat like the other quality (except 3) but those wines have high alcohol and less sulphates.
+
+### Eye for lower chloride presence for better wine
+
+_citric acid: the amount of salt in your wine_
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot(aes(x = quality.lvl, y = chlorides), data = gapmind) +
+  geom_jitter(size = 0.1, alpha = 0.4) +
+  scale_y_continuous(trans = 'log10') +
+  geom_boxplot(outlier.colour = 'red', alpha =0.5, outlier.size = 0.5) +  
+  labs(x = 'Quality level', 
+       y = 'Citric acid (g / dm^3)') +
+  ggtitle("Citric Acid by quality (red outliers)")
+```
+
+***
+
+# Final Plots and Summary
+
+In the above analysis I tried to document my problems and solutions. I'll repeat three of the above plots and give my reasons why they are essential.
+
+
+```{r,echo=FALSE,warning=FALSE}
+#adding ratio of residual.sugar/chlorides to gapmind dataframe
+ggplot(aes(x =residual.sugar, y = chlorides, color = factor(quality)), 
+       data = gapmind_quant) +
+      geom_point(alpha = 0.8, size = 1) +
+      geom_smooth(method = "lm", se = FALSE,size=1)  +
+  scale_color_brewer(type='seq', guide=guide_legend(title='Quality'))
+```
+
+I include this plot because this was our first strong evident for alcohol quality. We can see as before that the lower the chloride content, the better alcohol. Furthermore, low alcohol levels seems to have less sugar and high chloride content
+
+This plot spurred my interest in exploring the relationship of chlorides and acids.
+
+
+```{r, echo=FALSE, warning=FALSE}
+sugar.chlorides+
+  geom_jitter(aes(color=citric.acid), size = 0.5) +
+  scale_colour_gradient2(low="red", high="blue", midpoint=0.25) +
+  ggtitle('Chlorides, residual sugar & citric acid facetted by quality')
+```
+
+citric acid and white wine quality are very less related. At the later part of analysis we confirmed this by plotting boxplot of citric acid that it does not play so significant role here to enhance white wine quality.
+
+
+```{r,echo=FALSE,warning=FALSE}
+ggplot(aes(x = quality.lvl, y = chlorides), data = gapmind) +
+  geom_jitter(alpha = 0.2, color = 'orange') +
+  geom_boxplot(outlier.colour = 'red', alpha = 0.3) +
+  stat_summary(fun.y = "mean", geom = "point", color = "blue", shape = 8, size = 4) +
+  coord_cartesian() +
+  ylim(quantile(gapmind$chlorides,0.05),quantile(gapmind$chlorides,0.95)) +
+  ggtitle("Chlorides by quality, red outliers")
+```
+
+```{r,echo=FALSE,warning=FALSE}
+le_long <- gather(gapmind, key = year, value = life, -Country, convert = TRUE)
+le_long$year <- as.factor(sub('X', ' ', le_long$year))
+five_y <- as.character(seq(1800, 2015, 5))
+le_five <- filter(le_long, year %in% five_y)
+ggplot(aes(x = year, y = life), data = le_five) +
+    theme_dark() +
+    geom_boxplot(fill = "lightsteelblue") + 
+    ggtitle("Life Expectancy Worldwide, 1800-2015")
+```
+
+The overall downward trend here with strong correlation, tells us that less salt in wine better quality.
+
+## Reflection
+ 
+In this project my main focus was to do only exploratory analysis.
+
+1. I started the analysis by looking at the data overal. Some data points seemed really far out and during the analysis, I removed some of them. But I decided to keep them in the end as wine tastes can vary greatly.  
+Looking at the different variables, I decidied to investigate what made a wine good.
+2. I  started by looking at the main things that could affect taste: alcohol, chlorides, residual.sugar and  pH. My first finding was really about alcohol and quality.  
+3. I then moved to multivariables analyses by combining alcohol with chlorides and residual.sugar. The overall trends by quality looked quite similar so I tried to plot chlorides with residual.sugar. But the results was not what I was expecting. Thinking that another factor might be related with those two, I went through the the acidity variables and the quality to select volatile.acidity and citric.acidity and plot them with chlorides and residual.sugar.
+
+I did the same exercice for the rest of the variables. I was looking for some more adavanced relations between the variables but was not able to find them. I am
+I get all in all several variables correlating with quality:
+1. Alcohol
+2. Volatile acidity
+3. Citric acid
+4. Sulphates
+
+
+_The limits of the dataset are really the lack of points on the lower and higher quality wines. Futhermore, the source of the quality is unknown, is it from a professionnal? A store? And we have to keep in mind that taste is a really cultural thing (see the [indian food analysis](http://www.washingtonpost.com/blogs/wonkblog/wp/2015/03/03/
+a-scientific-explanation-of-what-makes-indian-food-so-delicious/)) and a good wine for someone might not be for another._
+
+
+_Last but not least, we do not have the age of the wine. In France, one of the first thing we check for a wine is its age because common knowledge dictates that an older wine is bet Another thing that I would like is to get the name of the wines so that I can get their prices and see if how they relate to quality._
