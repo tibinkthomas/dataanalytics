@@ -14,7 +14,7 @@ This repository is a collection of code and figures used in the final project.
 
 - Description : The data has 197 countries and for each of the 197 unique countries and 6 regions namelky South Asia, Europe & Central Asia, Middle East & North Africa, Sub-Saharan Africa, America and East Asia & Pacific, the data provides values for Life, Population and Income for 41284 observations. The data spans from year 1800 to year 2015.  
 
-## Link to the report: Tibin's Report on GapMinder Data 
+## Link to the report: Tibin's Report on GapMinder Data: https://github.com/tibinkthomas/dataanalytics/blob/master/TibinThomasGapMinder.Rmd
 
 ### The different sections are, 
 
