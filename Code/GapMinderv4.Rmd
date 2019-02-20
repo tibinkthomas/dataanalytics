@@ -1,0 +1,238 @@
+---
+title: "Gap Minder Analysis"
+author: "Tibin Thomas"
+date: "2/17/2019"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+
+----------------
+
+### Objective
+
+The goal of this project is to analyze gapminder dataset by exploring the data, visualizing the data and reporting the findings in a precise and concise format. 
+
+
+```{r,echo=FALSE,warning=FALSE}
+library(readxl)
+gapmind <- read.csv("C:/Users/tthomas/OneDrive/Academics/MS in Analytics/ANLY506ExploratoryDataAnaly/FinalProject/dataanalytics/Data/gapminder.csv")
+View(gapmind)
+library(ggplot2)
+library(RColorBrewer)
+library(GGally)
+library(reshape2)
+library(ggpubr)
+library(plyr)
+library(dplyr)
+library(magrittr)
+library(ggplot2)
+library(tidyr)
+library(data.table)
+library(markdown)
+library(twang)
+library(factoextra)
+library(nycflights13)
+library(lubridate)
+library(matrixStats)
+```
+
+### Overview
+
+To get an overview of the data, let's shake the data like a little gift box we received. Let's use some R functions to obtain glances at the data. 
+
+```{r, echo=TRUE, warning=FALSE}
+class(gapmind)# To see what class the object is
+names(gapmind)# To see the variables 
+```
+
+The data.frame object has 6 variables, Country, Year, Life, Population, Income and region. 
+Let us analyze the object to see what the datatypes are for the object. 
+
+```{r, echo=FALSE, warning=FALSE}
+str(gapmind)#Detailed summary of structure of data
+head(gapmind)# First few rows of data
+unique(gapmind$Country)
+unique(gapmind$Year)
+unique(gapmind$region)
+```
+
+There are 41284 data points.The dataset has 197 countries and for each of the 197 unique countries and 6 regions namely South Asia, Europe & Central Asia, Middle East & North Africa, Sub-Saharan Africa, America and East Asia & Pacific, the data provides values for Life, Population and Income for 41284 observations. The data spans from year 1800 to year 2015.
+
+Next step is to see what the data really is. Let's get a summary for the data.
+
+```{r, echo=TRUE, warning=FALSE}
+summary(gapmind)# To see the quantitive summary of the data
+```
+
+The summary shows us a lot of takeaways which gives us a feel for the data.  Taking note that there are a lot of NAs in the dataset. We need to remember to take that in to consideration while analyzig the data. Looking at the data, we find that the region can be a substantial summariser for the data. Let's dive more into the data. 
+
+***
+
+## Univariate Analysis
+
+Now that we have a general idea about the data, let us see the summary of each variables by groups to get a better feel for the data. Then let us look at the distribution to see how the counts are. This wil be very beneficial for bivariate analysis as well. Life, income and population looks very intriguing to me at this point.
+
+Let us start looking at life.
+
+### Life
+
+Let's check life spread and summary 
+
+```{r,echo=TRUE,warning=FALSE}
+arrange(gapmind, life)
+arrange(gapmind, desc(life)) 
+View(gapmind %>% # Compute groupwise and show the table
+ group_by(region) %>%
+ summarize(mean(life),
+ median(life)))
+gapmind %>% # For each region
+ group_by(region) %>%
+ summarize("StandardDeviation" = sd(life),
+ "InterQuartileRange" = IQR(life),
+ "Number" = n())
+```
+
+It looks like the lowest life expectancy is for Fiji with 1 year for the year 1875. Andora for year 2015 has the highest life expectancy at 84.1 years. The table shows the mean and median of life expectancy for the 5 regions and Europe & Central Asia has the highest mean and median life expectancy at 48.79419 and 41.74110 and the gighest standard deviation and IQR at 17.09 and 31.   
+
+Next let's look at the distribution of life, 
+
+```{r,echo=TRUE,warning=FALSE}
+ggplot(gapmind) + geom_boxplot(aes(x = region, y = life))
+a <- ggplot(gapmind, aes(x = life))
+a + geom_density() +
+  geom_vline(aes(xintercept = mean(life)), 
+             linetype = "dashed", size = 0.6)
+a + geom_density(aes(y = ..count..), fill = "lightgray") +
+  geom_vline(aes(xintercept = mean(life)), 
+             linetype = "dashed", size = 0.6,
+             color = "#FC4E07")
+```
+The box plot reveals that we have the highest mean life in Europe and Central. From this basic data, let's move on to see hjow population looks like
+
+### Population
+
+Let's check population spread and summary
+
+```{r,echo=TRUE,warning=FALSE}
+gapmind %>% # For each region
+ group_by(region) %>%
+ summarize("StandardDeviation" = sd(population),
+ "InterQuartileRange" = IQR(population),
+ "Number" = n())
+```
+Let's start looking at the variance measures in the data. The highest deviation is recorded for Europe & Nnorth America at 4738.4 while the lowest deviation is for south asia. Now that we have a feel of the populatoin, let us look at the income data. 
+
+### Income
+
+Next let us look at Income,    
+```{r,echo=TRUE,warning=FALSE}
+arrange(gapmind, income)
+arrange(gapmind, desc(income)) 
+View(gapmind %>% # Compute groupwise and show the table
+ group_by(region) %>%
+ summarize(mean(income, na.rm=TRUE),
+ median(income, na.rm=TRUE)))
+gapmind %>% # For each region
+ group_by(region) %>%
+ summarize("StandardDeviation" = sd(income, na.rm=TRUE),
+ "InterQuartileRange" = IQR(income, na.rm=TRUE),
+ "Number" = n())
+```
+
+It looks like the lowest income reported was for the country Liberia in Sub-Suharan Africa for the year 1995. The highest income recorded was for Country United Arab Emirates in Middle East & North Africa for the year 1980. Highest mean income was for Middle East & North Africa at 8064.382 while the lowest was for South Asia at 1384.976. Lowest median income was sub saharan Africa at 827 while the highest median was for Europe & Central Asia at 2735. 
+
+```{r,echo=TRUE,warning=FALSE}
+ggplot(gapmind) + geom_boxplot(aes(x = region, y = income))
+a <- ggplot(gapmind, aes(x = income))
+a + geom_density() +
+  geom_vline(aes(xintercept = mean(income)), 
+             linetype = "dashed", size = 0.6)
+a + geom_density(aes(y = ..count..), fill = "lightgray") +
+  geom_vline(aes(xintercept = mean(income)), 
+             linetype = "dashed", size = 0.6,
+             color = "#FC4E07")
+```
+
+The above graph tells us that the distribution is skewed. The distribution has a very small number of large values and a very large number of small values. 
+
+Now that we have identified and did a quick analysis on the single variables, let us look at bivariate analysis.
+
+***
+
+##Bivariate  analysis
+
+Next, let us look at the bivariate analysis. First let us look at income and life  
+
+### Income and Life
+
+```{r,echo=TRUE,warning=FALSE}
+p <- ggplot(filter(gapmind),
+            aes(x = income, y = life)) # just initializes
+p <- p + scale_x_log10() # log the x axis the right way
+p + geom_point() # scatterplot
+p + geom_point(aes(color = region)) # map continent to color
+p + geom_point(alpha = (1/3), size = 3) + geom_smooth(lwd = 3, se = FALSE)
+p + geom_point(alpha = (1/3), size = 3) + facet_wrap(~ region) +
+  geom_smooth(lwd = 1.5, se = FALSE)
+```
+
+To check if the income levels affect life generally, we plot income vs life and conduct a correlation test. The graphs gives us a very visual relation between income and life. Upn visual inspection, it is evident that there is apositive correlatoin between incoem and life which mean higher the income, higher the life expectancy. We need to make sure using the correlatoin test.  
+
+```{r,echo=TRUE,warning=FALSE}
+ggplot(aes(x = income, y = life), data = gapmind) +
+  geom_jitter(alpha = 0.5, size = 0.2) +
+  geom_boxplot(outlier.colour= 'red', alpha = 0.5, color = 'blue') +
+  ggtitle("Income vs life")
+cor(gapmind$life, gapmind$income, use = 'pairwise')
+```
+
+There is a correlation of 0.58 between income and life which is evidence that these two are correalated.We can observe from the graph that the higher the income, the higher the life. This is very much true for America. 
+
+***
+### Year and Life 
+
+```{r,echo=TRUE,warning=FALSE}
+p <- ggplot(filter(gapmind),
+            aes(x = Year, y = life)) # just initializes
+p <- p + scale_x_log10() # log the x axis the right way
+p + geom_point() # scatterplot
+p + geom_point(aes(color = region)) # map continent to color
+p + geom_point(alpha = (1/3), size = 3) + geom_smooth(lwd = 3, se = FALSE)
+p + geom_point(alpha = (1/3), size = 3) + facet_wrap(~ region) +
+  geom_smooth(lwd = 1.5, se = FALSE)
+```
+
+To check if the life generally increases or decreases as the time progress, we plot year vs life and conduct a correlation test. The first step is to look at the graph and do a visual analysis which reveals that there is strong positive correlation. I.e as the time passes, the life expectancy increases. we need to run a corrleation test to confirm that there is a significant correlation. 
+
+```{r,echo=TRUE,warning=FALSE}
+ggplot(aes(x = Year, y = life), data = gapmind) +
+  geom_jitter(alpha = 0.5, size = 0.2) +
+  geom_boxplot(outlier.colour= 'red', alpha = 0.5, color = 'blue') +
+  ggtitle("Year VS Life")
+cor(gapmind$Year, gapmind$life, use = 'pairwise')
+```
+
+There is a strong correlation of 0.78 between year and life which is evidence that these two are correalated. We can observe from the graph that as the time progresses, the life expectancy becomes higher. This is very much true for Sub Saharan Africa. 
+
+After identifying and analyzing the correlations, we are ready to summarize the findings. 
+
+***
+
+# Summary and Conclusion
+
+In the above analysis I tried to analyze the GapMinder data set in an exploratory manner. I tried TO pick the graphs that would give us the best representation of the data while avoiding unnecessary clutter. 
+
+As an intial step,I looked at the the variables separately to see the trend within. Quantitative summary as well as a distrubutive summary was obtained for all the variables. We were also able to group variables to get more contextual picture of the dataset. One striking conclusion was the eventhough there is a .78 correlation between the life and year, the graph stayed flat for the intial years to rise steeply in later years. This brings out the importance of exploratoiry data analysis and the importance of visual inspection of every graph your encounter before jumping to conclusions. 
+
+In conclusion, this project analyzed a dataset that had 41284 data points and the data set contained data from 197 countries.For each of the 197 unique countries and 6 regions namely South Asia, Europe & Central Asia, Middle East & North Africa, Sub-Saharan Africa, America and East Asia & Pacific, the data provides values for Life, Population and Income from year 1800 to year 2015. after performing intial analysis, we find that there is a correlation of 0.58 between income and life which is evidence that these two are correalated. We can observe from the graph that the higher the income, the higher the life. additonally, there is a strong correlation of 0.78 between year and life which is evidence that these two are  significantly correalated. We can observe from the graph that as the time progresses, the life expectancy becomes higher. This is very much true for Sub Saharan Africa. The graphs act as visual tools to verify the correlatoin claims. 
+
+#Reflection and next steps
+
+The nxt steps in the process is to create models for the data. We will use the explloratory data analysis we just did on thi sdataset and expland the analysis to include predictoing models. 
+
+Additonaly, Looking at thte data, we intially found that there were numurous NA values in the data. Ideally we would prefer dataset with very minimal NA values. 
+
+All in all, the dataset analysis turned out to be a great exercise to see the variables and it's correlations in dieefercnt part of the world. 
